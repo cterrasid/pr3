@@ -3,12 +3,12 @@ const
   NUM_ACTIVITIES: integer = 7;     { Max. number of activities of the subject }
   NUM_CAA_ACTIVITIES: integer = 4; { Number of CAA activities }
   NUM_PR_ACTIVITIES: integer = 3;  { Number of PR activities }
+
   MIN_C_MINUS: real = 3.0;         { Minimum mark for grade C- }
   MIN_C_PLUS: real = 5.0;          { Minimum mark for grade C+ }
   MIN_B: real = 7.0;               { Minimum mark for grade B }
   MIN_A: real = 9.0;               { Minimum mark for grade A }
-
-
+  
   CAA1_WEIGHT: integer = 10;       { Percent weight of CAA1 in EC grade }
   CAA2_WEIGHT: integer = 20;       { Percent weight of CAA2 in EC grade }
   CAA3_WEIGHT: integer = 30;       { Percent weight of CAA3 in EC grade }
@@ -18,14 +18,12 @@ const
   PR3_WEIGHT: integer = 50;        { Percent weight of PR3 in PR grade }
 end const
 
-
 type
   { User defined types }
-  tGrade = (A, B, C_PLUS, C_MINUS, D);
-  tActivityType = (CAA, PR);
-  tActivityName = (CAA1, CAA2, CAA3, CAA4, PR1, PR2, PR3);
-  tActivityState = (SUBMITTED, NOT_SUBMITTED, EXCLUDED);
-
+  tGrade = {A, B, C_PLUS, C_MINUS, D};
+  tActivityType = {CAA, PR};
+  tActivityName = {CAA1, CAA2, CAA3, CAA4, PR1, PR2, PR3};
+  tActivityState = {SUBMITTED, NOT_SUBMITTED, EXCLUDED};
 
   tActivity = record
     name: tActivityName;              { Activity Name }
@@ -33,13 +31,11 @@ type
     mark: real;                       { Activity Mark }
   end record;
 
-
   tStudent = record
     studentId: integer;               { Student ID }
     name: string;                     { Student Name }
     activities: vector[NUM_ACTIVITIES] of tActivity; { Student Activities }
   end record;
-
 
   tStudentsTable = record
     students: vector[MAX_STUDENTS] of tStudent; { Students info and grades }
@@ -61,14 +57,11 @@ action studentsLoadDataFromFile (
     i: integer;
   end var;
 
-
   fileToRead := openFile(filename);
   if fileToRead ≠ NULL then
 
-
     { Initialize table }
     studentsTable.nStudents := 0;
-
 
     while not isEndOfFile(fileToRead) and studentsTable.nStudents < MAX_STUDENTS do
       newStudent.studentId := readIntegerFromFile(fileToRead);
@@ -78,15 +71,32 @@ action studentsLoadDataFromFile (
         newStudent.activities[i].mark := readRealFromFile(fileToRead);
         newStudent.activities[i].state := readEnumFromFile(fileToRead);
         { Assign activity name }
-         if i <= NUM_CAA_ACTIVITIES then
-             newStudent.activities[i].name := CAA1 + i;
-         else
-             if i <= NUM_CAA_ACTIVITIES + NUM_PR_ACTIVITIES then
-                 newStudent.activities[i].name := PR1 + i - NUM_CAA_ACTIVITIES;
-             end if
-         end if
+        if i := 1 then
+          newStudent.activities[i].name := CAA1;
+        else
+            if i := 2 then
+                newStudent.activities[i].name := CAA2;
+            else
+                if i := 3 then
+                    newStudent.activities[i].name := CAA3;
+                else
+                    if i := 4 then
+                        newStudent.activities[i].name := CAA4;
+                    else
+                        if i := 5 then
+                            newStudent.activities[i].name := PR1;
+                        else
+                            if i := 6 then
+                                newStudent.activities[i].name := PR2;
+                            else
+                                newStudent.activities[i].name := PR3;
+                            end if
+                        end if
+                    end if
+                end if
+            end if
+        end if
       end for;
-
 
       { Add newStudent to studentsTable }
        studentsTable.nStudents := studentsTable.nStudents + 1;
@@ -104,12 +114,12 @@ end action;
 { Calculate final mark for PEC and PR }
 action calculateFinalGrade (
   in activities: vector[NUM_ACTIVITIES] of tActivity,
-  out finalCaaMark: float,
-  out finalPrMark: float
+  out finalCaaMark: real,
+  out finalPrMark: real
   )
   var
     activityType: tActivityType;
-    activityWeight, caaWeightedMarks, caaWeightsSum, prWeightedMarks, prWeightsSum: float;
+    activityWeight, caaWeightedMarks, caaWeightsSum, prWeightedMarks, prWeightsSum: real;
     i: integer;
   end var
 
@@ -161,7 +171,7 @@ end action
 action getActivityInfo (
   in activityName: tActivityName,
   out activityType: tActivityType,
-  out activityWeight: float
+  out activityWeight: real
 )
   if activityName = CAA1 then
       activityType := CAA;
@@ -212,14 +222,12 @@ action getSubmittedActivities (
 )
   var
       activityType: tActivityType;
-      activityWeight: float;
+      activityWeight: real;
       i: integer;
   end var
 
-
   caaSubmittedCount := 0;
   prSubmittedCount := 0;
-
 
   for i := 1 to NUM_ACTIVITIES do
       if activities[i].state = SUBMITTED then
@@ -237,20 +245,19 @@ action getSubmittedActivities (
   end for
 end action
 
-
 { Exercise 5 }
 { Display student data }
 action writeStudentData (
   in student: tStudent,
-  in markCaa: float,
-  in markPr: float,
+  in markCaa: real,
+  in markPr: real,
   in nCaa: integer,
   in nPr: integer
 )
   writeInteger(student.studentId);
   writeString(student.name);
-  writeFloat(markCaa);
-  writeFloat(markPr);
+  writeReal(markCaa);
+  writeReal(markPr);
   writeInteger(nCaa);
   writeInteger(nPr);
   writeBoolean(areAllPrSubmitted(student.activities));
@@ -262,10 +269,9 @@ end action;
 function areAllPrSubmitted (activities: vector[NUM_ACTIVITIES] of tActivity): boolean
     var
         activityType: tActivityType;
-        activityWeight: float;
+        activityWeight: real;
         i: integer;
     end var
-
 
     for i := 1 to NUM_ACTIVITIES do
         getActivityInfo(activities[i], activityType, activityWeight);
@@ -276,28 +282,24 @@ function areAllPrSubmitted (activities: vector[NUM_ACTIVITIES] of tActivity): bo
   return true;
 end function
 
-
 algorithm UOCSubjectGrade
   var
     studentsTable: tStudentsTable;
     i: integer;
     filename: string;
     isRead: boolean;
-    finalCaaMark: float;
-    finalPrMark: float;
+    finalCaaMark: real;
+    finalPrMark: real;
     caaSubmittedCount: integer;
     prSubmittedCount: integer;
   end var;
-
 
   { Load data from file }
   writeString("LOAD DATA FROM FILE. ENTER FILENAME >>");
   filename := readString();
 
-
   { Exercise 1 }
   studentsLoadDataFromFile(filename, studentsTable, isRead);
-
 
   if isRead then
     writeString("RESULTS:");
